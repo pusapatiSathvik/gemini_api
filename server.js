@@ -87,7 +87,7 @@ app.post('/api',async (req,res)=>{
           createdAt: new Date().toISOString(),
         };
     
-        // await db.collection("interviews").add(interview);
+        await db.collection("interviews").add(interview);
     
         return res.status(200).json({ success: true,interview});
       } catch (error) {
