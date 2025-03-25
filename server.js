@@ -4,9 +4,21 @@ const express = require('express');
 const cors = require('cors');
 // Replace with your service account key file path
 
-const serviceAccount = require('./firebase.json');
+// const serviceAccount = require('./firebase.json');
 
-
+const serviceAccount = {
+  type: process.env.FIREBASE_TYPE,
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"), // Handle newlines
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: process.env.FIREBASE_AUTH_URI,
+  token_uri: process.env.FIREBASE_TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_cert_url,
+  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_cert_url,
+  universe_domain : process.env.universe_domain
+};
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -63,7 +75,7 @@ app.post('/api',async (req,res)=>{
         // console.log("Type of questions:", typeof questions);
         // console.log("Value of questions:", questions);
         // console.log("Candidates:", questions.response.candidates);
-        // console.log("Content Parts:", questions.response.candidates[0].content.parts);
+        console.log("Content Parts:", questions.response.candidates[0].content.parts);
         
         const jsonString = questions.response.candidates[0].content.parts[0].text;
         
