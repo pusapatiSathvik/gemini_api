@@ -91,13 +91,15 @@ app.post('/api',async (req,res)=>{
           role: role,
           type: type,
           level: level,
-          techstack: techstack.split(","),
+          techstack: techstack,
           questions: parsedQuestions,
           userId: userid,
           finalized: true,
         //   coverImage: getRandomInterviewCover(),
           createdAt: new Date().toISOString(),
         };
+      
+        console.log(interview);
     
         await db.collection("interviews").add(interview);
     
