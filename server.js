@@ -54,7 +54,7 @@ app.get('/api/users', async (req, res) => {
   });
 
 app.post('/api',async (req,res)=>{
-    console.log(req.json());
+
     const {type,role,level,techstack,amount,userid} = req.body;
   
 
