@@ -54,6 +54,7 @@ app.get('/api/users', async (req, res) => {
   });
 
 app.post('/api',async (req,res)=>{
+    console.log(req.body);
     const {type,role,level,techstack,amount,userid} = req.body;
 
     try {
@@ -70,6 +71,8 @@ app.post('/api',async (req,res)=>{
         ["Question 1", "Question 2", "Question 3"]
 
         Thank you! <3`;
+        console.log(prompt);
+      
 
         const questions = await model.generateContent(prompt);
         // console.log("Type of questions:", typeof questions);
