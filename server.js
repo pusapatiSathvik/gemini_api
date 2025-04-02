@@ -54,6 +54,11 @@ app.get('/api/users', async (req, res) => {
   });
 
 app.post('/api',async (req,res)=>{
+    console.log(req.headers);
+    console.log("next");
+    console.log(req.rawBody || req.body);
+
+
 
     const {type,role,level,techstack,amount,userid} = req.body;
   
