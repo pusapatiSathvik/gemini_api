@@ -126,17 +126,8 @@ app.get('/api/users', async (req, res) => {
 
 
 app.post('/api',async (req,res)=>{
-<<<<<<< Updated upstream
-    console.log(req.headers);
-    console.log("next");
-    console.log(req.rawBody || req.body);
-
-
-
-=======
     // console.log(req);
     console.log("body",req.body);
->>>>>>> Stashed changes
     const {type,role,level,techstack,amount,userid} = req.body;
   
 
@@ -179,17 +170,12 @@ app.post('/api',async (req,res)=>{
         //   coverImage: getRandomInterviewCover(),
           createdAt: new Date().toISOString(),
         };
-<<<<<<< Updated upstream
-      
-        console.log(interview);
-=======
         
         console.log(interview);
 
         const docRef = await db.collection("interviews").add(interview);
         const interviewId = docRef.id; 
         console.log(interviewId);
->>>>>>> Stashed changes
     
         res.status(200).json({ interviewId });
       } catch (error) {
