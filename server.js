@@ -2,9 +2,6 @@ require('dotenv').config({ path: './.env' }); // Load .env.local file
 const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors');
-// Replace with your service account key file path
-
-// const serviceAccount = require('./firebase.json');
 
 const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
@@ -28,7 +25,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 
 
-admin.initializeApp({
+admin.initializeApp({  
   credential: admin.credential.cert(serviceAccount),
 });
 
@@ -53,13 +50,93 @@ app.get('/api/users', async (req, res) => {
     }
   });
 
+
+  app.post('/api/interview/:interviewId/feedback', async (req, res) => {
+    console.log("Feedback request received for interview ID:", req.params.interviewId);
+    const { conv, jobRole, candidateName } = req.body;
+    const { interviewId } = req.params;
+    
+    const FeedbackPrompt = `{{conversation}}
+  Depends on this Interview Conversation between assistant and user,
+  Give me feedback for user interview. Give me rating out of 10 for technical Skills,
+  Communication, Problem Solving, Experience. Also give me summary in 3 lines
+  about the interview and one line to let me know whether it is recommended
+  for hire or not with msg. Give me response in JSON format
+  {
+    feedback:{
+      rating:{
+        technicalSkills:<give rating out of 10>,
+        communication:<give rating out of 10>,
+        problemSolving:<give rating out of 10>,
+        experience:<give rating out of 10>
+      },
+      summary:<in 3 Line>,
+      Recommendation:"",
+      RecommendationMsg:""
+    }
+  }
+  `;
+  
+    const finalPrompt = FeedbackPrompt.replace('{{conversation}}', JSON.stringify(conv));
+  
+    try {
+      const feedback = await model.generateContent(finalPrompt);
+      if (
+        feedback &&
+        feedback.response &&
+        feedback.response.candidates &&
+        feedback.response.candidates.length > 0 &&
+        feedback.response.candidates[0].content &&
+        feedback.response.candidates[0].content.parts &&
+        feedback.response.candidates[0].content.parts.length > 0
+      ) {
+        const rawText = feedback.response.candidates[0].content.parts[0].text;
+  
+        const jsonText = rawText.replace(/```json|```/g, '').trim();
+        const parsedFeedback = JSON.parse(jsonText);
+
+        console.log("THis the feedback generated");
+        console.log(parsedFeedback);
+
+        // Save feedback to Firestore
+        const feedbackData = {
+          interviewId: interviewId,
+          userId: req.body.userId, // Assuming you send userId in the request body
+          rating: parsedFeedback.feedback.rating,
+          summary: parsedFeedback.feedback.summary,
+          recommendation: parsedFeedback.feedback.Recommendation,
+          recommendationMsg: parsedFeedback.feedback.RecommendationMsg,
+          createdAt: admin.firestore.Timestamp.now(),
+        };
+        const docRef = await db.collection('feedbacks').add(feedbackData);
+        const feedbackId = docRef.id;
+        console.log("Feedback saved to Firebase with ID:", feedbackId);
+        
+        res.status(200).json({ feedback: parsedFeedback.feedback, feedbackId }); // Return feedback and ID
+        
+      } else {
+        res.status(500).json({ error: 'Unexpected response structure from model', feedback });
+      }
+    } catch (error) {
+      console.error('Error parsing feedback:', error);
+      res.status(500).json({ error: 'Error processing feedback', details: error.message });
+    }
+  });
+  
+
+
 app.post('/api',async (req,res)=>{
+<<<<<<< Updated upstream
     console.log(req.headers);
     console.log("next");
     console.log(req.rawBody || req.body);
 
 
 
+=======
+    // console.log(req);
+    console.log("body",req.body);
+>>>>>>> Stashed changes
     const {type,role,level,techstack,amount,userid} = req.body;
   
 
@@ -86,13 +163,8 @@ app.post('/api',async (req,res)=>{
         // console.log("Candidates:", questions.response.candidates);
         console.log("Content Parts:", questions.response.candidates[0].content.parts);
         
-        const jsonString = questions.response.candidates[0].content.parts[0].text;
-        
-        // // Inspect before parsing
-
-        // console.log("JSON String:", jsonString); 
-    
-        // Parse the JSON string to get the questions array
+        const rawText = questions.response.candidates[0].content.parts[0].text;
+        const jsonString = rawText.replace(/```json\s*|\s*```/g, '');
         const parsedQuestions = JSON.parse(jsonString);
 
     
@@ -107,21 +179,24 @@ app.post('/api',async (req,res)=>{
         //   coverImage: getRandomInterviewCover(),
           createdAt: new Date().toISOString(),
         };
+<<<<<<< Updated upstream
       
         console.log(interview);
+=======
+        
+        console.log(interview);
+
+        const docRef = await db.collection("interviews").add(interview);
+        const interviewId = docRef.id; 
+        console.log(interviewId);
+>>>>>>> Stashed changes
     
-        await db.collection("interviews").add(interview);
-    
-        return res.status(200).json({ success: true,interview});
+        res.status(200).json({ interviewId });
       } catch (error) {
         console.error("Error:", error);
         return res.status(500).json({ success: false, error: error.message });
 
       }
-
-
-
-    // res.json({message:"data recived"})
 })
 
 app.listen(process.env.PORT ,()=>{
