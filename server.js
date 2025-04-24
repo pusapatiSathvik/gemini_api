@@ -16,7 +16,9 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_AI_APIKEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-app.use(cors());
+app.use(cors({
+  origin: "https://hirevue-ai.netlify.app"
+}));
 app.use(express.json());
 
 app.get("/api/users", async (req, res) => {
@@ -38,34 +40,11 @@ app.post("/api/interview/:interviewId/feedback", async (req, res) => {
     "Feedback request received for interview ID:",
     req.params.interviewId
   );
-  console.log("Entire req.body:", req.body);
   const { Conversation, userId, jobRole, candidateName } = req.body;
   const { interviewId } = req.params;
 
-  console.log(Conversation);
-  console.log("This is the request body....", Conversation);
-
-  //   const FeedbackPrompt = `{{conversation}}
-  // Depends on this Interview Conversation between assistant and user,
-  // Give me feedback for user interview. Give me rating out of 10 for technical Skills,
-  // Communication, Problem Solving, Experience. Also give me summary in 3 lines
-  // about the interview and one line to let me know whether it is recommended
-  // for hire or not with msg. Give me response in JSON format.
-  // {
-  //   feedback:{
-  //     rating:{
-  //       technicalSkills:<give rating out of 10>,
-  //       communication:<give rating out of 10>,
-  //       problemSolving:<give rating out of 10>,
-  //       experience:<give rating out of 10>
-  //     },
-  //     summary:<in 3 Line>,
-  //     Recommendation:"",
-  //     RecommendationMsg:""
-  //   }
-  // }
-  // `;
-
+  // console.log(Conversation);
+  // console.log("This is the request body....", Conversation);
   const FeedbackPrompt = `
   {{conversation}}
 
@@ -147,13 +126,13 @@ Give your response in JSON format:
           feedback.response.candidates[0].content.parts.length > 0
         ) {
           const rawText = feedback.response.candidates[0].content.parts[0].text;
-          console.log("Raw Text---->", rawText);
+    //       console.log("Raw Text---->", rawText);
     
           const jsonText = rawText.replace(/```json|```/g, "").trim();
           const parsedFeedback = JSON.parse(jsonText);
     
           console.log("This the feedback generated");
-          console.log(parsedFeedback);
+    //       console.log(parsedFeedback);
     
           // Save feedback to Firestore
           const feedbackData = {
@@ -186,7 +165,7 @@ Give your response in JSON format:
 
 app.post("/api", async (req, res) => {
   // console.log(req);
-  console.log("body", req.body);
+  // console.log("body", req.body);
   const { type, role, level, techstack, amount, userid } = req.body;
 
   try {
