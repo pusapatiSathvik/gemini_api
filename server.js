@@ -3,7 +3,18 @@ const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
 const serviceAccount = require("./firebase.json"); // use your actual key file
-
+// const serviceAccount = {
+//   type: process.env.FIREBASE_TYPE,
+//   project_id: process.env.FIREBASE_PROJECT_ID,
+//   private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+//   private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Convert escaped newlines back
+//   client_email: process.env.FIREBASE_CLIENT_EMAIL,
+//   client_id: process.env.FIREBASE_CLIENT_ID,
+//   auth_uri: "https://accounts.google.com/o/oauth2/auth",
+//   token_uri: "https://oauth2.googleapis.com/token",
+//   auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+//   client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+// };
 // ✅ Initialize Firebase Admin only once
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -17,9 +28,18 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_AI_APIKEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.use(cors({
-  origin: "https://hirevue-ai.netlify.app"
+  origin: ["https://hireview-ten.vercel.app"],
+  methods : ["POST","GET"],
+  credentials : true
 }));
+
+
+app.use(cors())
 app.use(express.json());
+
+app.get("/test",async (req,res)=>{
+  res.json({message : "Hello"});
+})
 
 app.get("/api/users", async (req, res) => {
   try {
