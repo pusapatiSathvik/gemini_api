@@ -28,7 +28,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_AI_APIKEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.use(cors({
-  origin: ["https://hireview-ten.vercel.app"],
+  // origin: ["https://hireview-ten.vercel.app"],
+  origin: ["http://localhost:3000"],
   methods : ["POST","GET"],
   credentials : true
 }));
