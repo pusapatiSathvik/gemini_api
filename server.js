@@ -224,7 +224,6 @@ app.post("/api", async (req, res) => {
       questions: parsedQuestions,
       userId: userid,
       finalized: true,
-      //   coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
     };
 
@@ -238,6 +237,108 @@ app.post("/api", async (req, res) => {
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/interviewIDs', async (req, res) => {
+  const  userId  = req.query.userId; // Destructure userId correctly
+  console.log(userId);
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required in request body' });
+  }
+
+  try {
+    const interviewsRef = db.collection('interviews');
+    const feedbackRef = db.collection('feedback');
+
+    const interviewsSnapshot = await interviewsRef.where('userId', '==', userId).get();
+
+    if (interviewsSnapshot.empty) {
+      return res.status(404).json({ message: 'No interviews found for this user.' });
+    }
+
+    const results = [];
+
+    for (const doc of interviewsSnapshot.docs) {
+      const interviewId = doc.id;
+      const interviewData = doc.data();
+
+      const feedbackSnapshot = await feedbackRef
+        .where('interviewId', '==', interviewId)
+        .limit(1)
+        .get();
+
+      const feedbackData = !feedbackSnapshot.empty
+        ? feedbackSnapshot.docs[0].data()
+        : null;
+
+      results.push({
+        interviewId,
+        interview: interviewData,
+        feedback: feedbackData,
+      });
+    }
+
+    res.json(results); // Send the response
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/feedbackID', async (req, res) => {
+  console.log("Got a GET request for feedback ID...");
+
+  const interviewId = req.query.Id;
+  const userId = req.query.userId;
+
+  console.log("Interview ID:", interviewId);
+  console.log("User ID:", userId);
+
+  if (!interviewId || !userId) {
+    return res.status(400).json({ error: 'Both interviewId and userId are required in query params' });
+  }
+
+  try {
+    const feedbackRef = db.collection('feedbacks');
+
+    // Log all feedbacks (optional - for full view)
+    const allFeedback = await feedbackRef.get();
+    allFeedback.forEach(doc => {
+      console.log(`Full list => ${doc.id}: ${doc.data().interviewId} | ${doc.data().userId}`);
+    });
+
+    // Query only by userId
+    // const querySnapshot = await feedbackRef.where('userId', '==', userId).get();
+    const querySnapshot = await feedbackRef.where('userId', '==', userId)
+                                .where('interviewId', '==', interviewId).get();
+
+    if (querySnapshot.empty) {
+      console.log('❌ No feedback found for this user');
+      return res.status(404).json({ error: 'No feedbacks found for this user' });
+    }
+
+    // Log all feedbackIds that belong to this user
+    console.log(`✅ Feedback IDs for userId: ${userId}`);
+    querySnapshot.forEach(doc => {
+      console.log(`- ${doc.id}`);
+    });
+
+    const firstDoc = querySnapshot.docs[0];
+    const feedbackId = firstDoc.id;
+    const feedbackData = firstDoc.data();
+    console.log(`✅ Returning first feedback ID for user: ${userId}`);
+    console.log(`- ${feedbackId}`);
+
+    // Optionally respond with the list of IDs
+    // const feedbackIds = querySnapshot.docs.map(doc => doc.id);
+    
+    res.status(200).json({ feedbackId, feedback: feedbackData });
+
+  } catch (err) {
+    console.error('🔥 Error fetching feedbacks:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
