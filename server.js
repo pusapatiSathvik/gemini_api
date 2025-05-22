@@ -250,7 +250,7 @@ app.get('/interviewIDs', async (req, res) => {
 
   try {
     const interviewsRef = db.collection('interviews');
-    const feedbackRef = db.collection('feedback');
+    const feedbackRef = db.collection('feedbacks');
 
     const interviewsSnapshot = await interviewsRef.where('userId', '==', userId).get();
 
@@ -263,23 +263,29 @@ app.get('/interviewIDs', async (req, res) => {
     for (const doc of interviewsSnapshot.docs) {
       const interviewId = doc.id;
       const interviewData = doc.data();
+      var feedbackId = "NO";
 
-      const feedbackSnapshot = await feedbackRef
-        .where('interviewId', '==', interviewId)
-        .limit(1)
-        .get();
+      const querySnapshot = await feedbackRef.where('userId', '==', userId)
+                                .where('interviewId', '==', interviewId).get();
 
-      const feedbackData = !feedbackSnapshot.empty
-        ? feedbackSnapshot.docs[0].data()
-        : null;
 
-      results.push({
-        interviewId,
-        interview: interviewData,
-        feedback: feedbackData,
-      });
+      if (querySnapshot.empty) {
+        console.log('❌ No feedback found for this interviewID');
+      }
+      else{
+        console.log(`✅ feedback found for this ${interviewId}`);
+        const firstDoc = querySnapshot.docs[0];
+        feedbackId = firstDoc.id;
+      }
+
+      if(feedbackId!="NO"){
+        results.push({
+          interviewId,
+          interview: interviewData,
+          feedbackID: feedbackId,
+        });
+      }
     }
-
     res.json(results); // Send the response
   } catch (err) {
     console.error('Error:', err);
